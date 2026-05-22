@@ -24,47 +24,28 @@ local function parse_blame(output)
 	return result
 end
 
-local function get_blame_map(filepath)
-	local output = vim.fn.system({
-		"git", "-C", vim.fs.dirname(filepath),
-		"blame", "--line-porcelain", "--", filepath,
-	})
-	if vim.v.shell_error ~= 0 then
-		return nil
-	end
-	return parse_blame(output)
-end
-
-function M.refresh()
-	vim.api.nvim_buf_clear_namespace(0, ns, 0, -1)
-
-	local filepath = vim.api.nvim_buf_get_name(0)
-	if filepath == "" then
+local function render(bufnr, blame_map, now)
+	if not vim.api.nvim_buf_is_valid(bufnr) then
 		return
 	end
 
-	local ok, parser = pcall(vim.treesitter.get_parser, 0)
+	vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+
+	local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
 	if not ok or not parser then
 		return
 	end
 
-	local blame_map = get_blame_map(filepath)
-	if not blame_map then
-		return
-	end
-
-	local now = os.time()
-
 	local function scan_comment(node)
 		local srow, _, erow, _ = node:range()
-		local lines = vim.api.nvim_buf_get_lines(0, srow, erow + 1, false)
+		local lines = vim.api.nvim_buf_get_lines(bufnr, srow, erow + 1, false)
 		for offset, line in ipairs(lines) do
 			if line:find("%f[%w_]TODO%f[%W_]") then
 				local lnum = srow + offset - 1
 				local commit_time = blame_map[lnum + 1]
 				if commit_time then
 					local age_days = math.floor((now - commit_time) / 86400)
-					vim.api.nvim_buf_set_extmark(0, ns, lnum, 0, {
+					vim.api.nvim_buf_set_extmark(bufnr, ns, lnum, 0, {
 						virt_text = { { string.format("(%d days)", age_days), "Comment" } },
 						virt_text_pos = "eol",
 					})
@@ -83,6 +64,29 @@ function M.refresh()
 	end
 
 	visit(parser:parse()[1]:root())
+end
+
+function M.refresh()
+	local bufnr = vim.api.nvim_get_current_buf()
+	local filepath = vim.api.nvim_buf_get_name(bufnr)
+	if filepath == "" then
+		return
+	end
+
+	local now = os.time()
+
+	vim.system({
+		"git", "-C", vim.fs.dirname(filepath),
+		"blame", "--line-porcelain", "--", filepath,
+	}, { text = true }, function(obj)
+		if obj.code ~= 0 then
+			return
+		end
+		local blame_map = parse_blame(obj.stdout)
+		vim.schedule(function()
+			render(bufnr, blame_map, now)
+		end)
+	end)
 end
 
 return M
