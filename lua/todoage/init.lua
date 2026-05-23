@@ -51,22 +51,29 @@ end
 
 local M = {}
 
+local UNCOMMITTED_SHA = string.rep("0", 40)
+
 local function parse_blame(output)
 	local result = {}
 	local current_lnum = nil
 	local current_time = nil
+	local current_committed = nil
 	for line in output:gmatch("[^\n]+") do
 		local sha, final = line:match("^(%x+) %d+ (%d+)")
 		if sha and #sha == 40 then
 			current_lnum = tonumber(final)
+			current_committed = sha ~= UNCOMMITTED_SHA
 		else
 			local time = line:match("^author%-time (%d+)")
 			if time then
 				current_time = tonumber(time)
 			elseif line:sub(1, 1) == "\t" and current_lnum and current_time then
-				result[current_lnum] = current_time
+				if current_committed then
+					result[current_lnum] = current_time
+				end
 				current_lnum = nil
 				current_time = nil
+				current_committed = nil
 			end
 		end
 	end
