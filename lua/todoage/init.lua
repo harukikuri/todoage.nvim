@@ -6,11 +6,11 @@ vim.api.nvim_set_hl(0, "TodoageStale", { link = "WarningMsg", bold = true, defau
 vim.api.nvim_set_hl(0, "TodoageFossil", { link = "ErrorMsg", bold = true, default = true })
 
 local function tier_hl(age_days)
-	if age_days <= 7 then
+	if age_days < config.tiers.aging then
 		return "TodoageFresh"
-	elseif age_days <= 30 then
+	elseif age_days < config.tiers.stale then
 		return "TodoageAging"
-	elseif age_days <= 180 then
+	elseif age_days < config.tiers.fossil then
 		return "TodoageStale"
 	else
 		return "TodoageFossil"
@@ -19,6 +19,11 @@ end
 
 local config = {
 	keywords = { "TODO", "FIXME", "HACK" },
+	tiers = {
+		aging = 7,
+		stale = 30,
+		fossil = 180,
+	},
 }
 
 local patterns = {}

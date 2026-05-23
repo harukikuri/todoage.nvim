@@ -39,6 +39,11 @@ Manual trigger:
 ```lua
 require("todoage").setup({
   keywords = { "TODO", "FIXME", "HACK", "XXX", "NOTE" },
+  tiers = {
+    aging  = 14,
+    stale  = 60,
+    fossil = 365,
+  },
 })
 ```
 
@@ -47,19 +52,26 @@ Defaults:
 ```lua
 {
   keywords = { "TODO", "FIXME", "HACK" },
+  tiers = {
+    aging  = 7,
+    stale  = 30,
+    fossil = 180,
+  },
 }
 ```
 
-`keywords` replaces the default list wholesale, not merges. If you want the defaults plus extras, list them all.
+`keywords` replaces the default list wholesale, not merges. If you want the defaults plus extras, list them all. `tiers` is merged key-by-key, so you can override just one threshold.
+
+Each `tiers` value is the day count at which the next tier begins. `aging = 14` reads as "Fresh tops out at 14 days; day 14 and beyond is Aging."
 
 ## Age tiers
 
 | Tier   | Range      | Default highlight   |
 | ------ | ---------- | ------------------- |
-| Fresh  | ≤ 7 days   | `Comment`           |
-| Aging  | ≤ 30 days  | `WarningMsg`        |
-| Stale  | ≤ 180 days | `WarningMsg` + bold |
-| Fossil | > 180 days | `ErrorMsg` + bold   |
+| Fresh  | < 7 days   | `Comment`           |
+| Aging  | < 30 days  | `WarningMsg`        |
+| Stale  | < 180 days | `WarningMsg` + bold |
+| Fossil | ≥ 180 days | `ErrorMsg` + bold   |
 
 ## Customizing colors
 
