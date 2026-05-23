@@ -236,4 +236,11 @@ function M.setup(opts)
 	})
 end
 
+M._test = {
+	parse_blame = parse_blame,
+	line_matches = line_matches,
+	tier_hl = tier_hl,
+	rebuild_patterns = rebuild_patterns,
+}
+
 return M
