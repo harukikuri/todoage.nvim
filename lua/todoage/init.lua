@@ -41,7 +41,7 @@ local function rebuild_patterns()
 				tostring(kw)
 			))
 		end
-		table.insert(new_patterns, "%f[%w_]" .. kw .. "%f[%W_]")
+		table.insert(new_patterns, "%f[%w_]" .. kw .. "%f[^%w_]")
 	end
 	patterns = new_patterns
 end
