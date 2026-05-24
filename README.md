@@ -103,6 +103,10 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 })
 ```
 
+## Troubleshooting
+
+Run `:checkhealth todoage` to verify your Neovim version, `git` availability, and tree-sitter parser coverage.
+
 ## Behavior on non-git files
 
 Buffers without a filename, files outside a git repository, and files not yet tracked render no annotations. No errors.
