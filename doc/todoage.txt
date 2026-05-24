@@ -1,0 +1,174 @@
+*todoage.txt*           Display TODO comment age as inline virtual text
+
+Author:  kuri-sun
+License: MIT
+
+==============================================================================
+CONTENTS                                                    *todoage-contents*
+
+  1. Introduction ..................................... |todoage-introduction|
+  2. Requirements ..................................... |todoage-requirements|
+  3. Setup ................................................... |todoage-setup|
+  4. Options ............................................... |todoage-options|
+     - keywords ........................................... |todoage-keywords|
+     - tiers ................................................. |todoage-tiers|
+     - format ............................................... |todoage-format|
+  5. Commands ............................................. |todoage-commands|
+  6. Highlights ......................................... |todoage-highlights|
+  7. Behavior ............................................. |todoage-behavior|
+
+==============================================================================
+1. INTRODUCTION                                         *todoage-introduction*
+
+todoage.nvim annotates TODO-style comments with their age as inline virtual
+text. The age is resolved via |git-blame| against the file on disk. Older
+comments are styled more loudly so they are harder to ignore.
+
+A line like: >
+    // TODO: handle refunds
+<
+becomes (visually, not on disk): >
+    // TODO: handle refunds                              (847 days)
+<
+
+==============================================================================
+2. REQUIREMENTS                                         *todoage-requirements*
+
+- Neovim 0.10+
+- `git` on $PATH
+- A tree-sitter parser for the filetype you want annotated.
+  Files without a parser are silently skipped.
+
+==============================================================================
+3. SETUP                                                       *todoage-setup*
+
+Call |todoage.setup()| from your config. With no arguments, defaults apply: >lua
+
+    require("todoage").setup()
+<
+
+With options: >lua
+
+    require("todoage").setup({
+      keywords = { "TODO", "FIXME", "HACK", "XXX", "NOTE" },
+      tiers = {
+        aging  = 14,
+        stale  = 60,
+        fossil = 365,
+      },
+      format = function(age_days)
+        return string.format("(%d days)", age_days)
+      end,
+    })
+<
+
+==============================================================================
+4. OPTIONS                                                   *todoage-options*
+
+------------------------------------------------------------------------------
+keywords                                                    *todoage-keywords*
+
+List of strings to recognize as TODO-style markers. Matched as standalone
+words (so `myTODOList` and `TODO_KEY` are skipped). Each keyword must contain
+only letters, digits, and underscores; |todoage.setup()| raises an error
+otherwise.
+
+Replaces the default list wholesale (does not merge). To extend defaults,
+list them all.
+
+Default: >lua
+
+    { "TODO", "FIXME", "HACK" }
+<
+
+------------------------------------------------------------------------------
+tiers                                                          *todoage-tiers*
+
+Day-count thresholds at which annotations escalate to the next visual tier.
+Each value is the day count at which the *next* tier begins. So `aging = 7`
+reads as "Fresh tops out at 7 days; day 7 and beyond is Aging."
+
+Merged key-by-key, so you can override just one threshold.
+
+Default: >lua
+
+    {
+      aging  = 7,
+      stale  = 30,
+      fossil = 180,
+    }
+<
+
+See |todoage-highlights| for the highlight group each tier uses.
+
+------------------------------------------------------------------------------
+format                                                        *todoage-format*
+
+Function taking the age in days and returning the string to render. The tier
+highlight is applied to whatever string you return.
+
+Errors in your format function are not caught — fix the function if
+annotations stop appearing.
+
+Default: >lua
+
+    function(age_days)
+      return string.format("(%d days)", age_days)
+    end
+<
+
+==============================================================================
+5. COMMANDS                                                 *todoage-commands*
+
+                                                                    *:Todoage*
+:Todoage                Refresh annotations on the current buffer.
+
+                                                              *:TodoageEnable*
+:TodoageEnable          Resume auto-refresh and re-annotate the current
+                        buffer.
+
+                                                             *:TodoageDisable*
+:TodoageDisable         Clear all annotations and pause auto-refresh.
+
+                                                              *:TodoageToggle*
+:TodoageToggle          Toggle enable/disable.
+
+==============================================================================
+6. HIGHLIGHTS                                             *todoage-highlights*
+
+Five groups, all linked to sensible colorscheme defaults. Override directly
+with |nvim_set_hl()| — there is no `colors` setup option.
+
+    TodoageFresh        < |todoage-tiers| `aging` (default 7 days)
+                        Linked to |hl-Comment|.
+
+    TodoageAging        < |todoage-tiers| `stale` (default 30 days)
+                        Linked to |hl-WarningMsg|.
+
+    TodoageStale        < |todoage-tiers| `fossil` (default 180 days)
+                        Linked to |hl-WarningMsg|, bold.
+
+    TodoageFossil       >= |todoage-tiers| `fossil`
+                        Linked to |hl-ErrorMsg|, bold.
+
+    TodoageUncommitted  Lines not yet committed to git.
+                        Linked to |hl-Comment|.
+
+==============================================================================
+7. BEHAVIOR                                                 *todoage-behavior*
+
+Annotations refresh automatically on:
+- |BufReadPost|        opening a file
+- |BufWritePost|       saving a file
+- |FocusGained|        re-focusing Neovim (catches external `git pull`)
+
+Refreshes are debounced ~150ms per buffer.
+
+Modified-but-unsaved buffers skip rendering entirely. Line numbers in the
+buffer diverge from line numbers in the on-disk blame, so annotations would
+be misleading. They reappear on save.
+
+Files without a |git| repository or not yet tracked render no annotations.
+Uncommitted lines render as `(uncommitted)` with the |hl-Comment| link.
+
+vim:tw=78:ts=8:ft=help:norl:
