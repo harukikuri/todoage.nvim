@@ -1,4 +1,4 @@
-# todoage.nvim
+# todoage.nvim ⏳
 
 Neovim plugin that displays the age of TODO comments as inline virtual text.
 
@@ -15,16 +15,15 @@ Neovim plugin that displays the age of TODO comments as inline virtual text.
 ```lua
 {
   "kuri-sun/todoage.nvim",
-  -- event = { "BufReadPost", "BufNewFile" },  -- optional: lazy-load
 }
 ```
 
 ## Usage
 
-`:Todoage` - refresh the current buffer
-`:TodoageEnable` - resume auto-refresh and re-annotate the current buffer
-`:TodoageDisable` - clear all annotations and pause auto-refresh
-`:TodoageToggle` - enable/disable
+- `:Todoage` - refresh the current buffer
+- `:TodoageEnable` - resume auto-refresh and re-annotate the current buffer
+- `:TodoageDisable` - clear all annotations and pause auto-refresh
+- `:TodoageToggle` - enable/disable
 
 ## Configuration
 
