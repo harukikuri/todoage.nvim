@@ -16,7 +16,6 @@ Neovim plugin that displays the age of TODO comments as inline virtual text.
 {
   "kuri-sun/todoage.nvim",
   -- event = { "BufReadPost", "BufNewFile" },  -- optional: lazy-load
-  -- opts = {},                                 -- replace {} with your options, or omit for defaults
 }
 ```
 
@@ -28,8 +27,6 @@ Neovim plugin that displays the age of TODO comments as inline virtual text.
 `:TodoageToggle` - enable/disable
 
 ## Configuration
-
-Defaults:
 
 ```lua
 opts = {
