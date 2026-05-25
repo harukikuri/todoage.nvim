@@ -36,10 +36,12 @@ local function rebuild_patterns()
 	local new_patterns = {}
 	for _, kw in ipairs(config.keywords) do
 		if type(kw) ~= "string" or not kw:match("^[%w_]+$") then
-			error(string.format(
-				"todoage: invalid keyword %q — keywords must contain only letters, digits, and underscores",
-				tostring(kw)
-			))
+			error(
+				string.format(
+					"todoage: invalid keyword %q — keywords must contain only letters, digits, and underscores",
+					tostring(kw)
+				)
+			)
 		end
 		table.insert(new_patterns, "%f[%w_]" .. kw .. "%f[^%w_]")
 	end
@@ -156,8 +158,13 @@ function M.refresh(bufnr)
 	local now = os.time()
 
 	vim.system({
-		"git", "-C", vim.fs.dirname(filepath),
-		"blame", "--line-porcelain", "--", filepath,
+		"git",
+		"-C",
+		vim.fs.dirname(filepath),
+		"blame",
+		"--line-porcelain",
+		"--",
+		filepath,
 	}, { text = true }, function(obj)
 		if obj.code ~= 0 then
 			return
@@ -177,13 +184,17 @@ local function debounced_refresh(bufnr)
 		timers[bufnr]:close()
 	end
 	timers[bufnr] = vim.uv.new_timer()
-	timers[bufnr]:start(150, 0, vim.schedule_wrap(function()
-		if timers[bufnr] then
-			timers[bufnr]:close()
-			timers[bufnr] = nil
-		end
-		M.refresh(bufnr)
-	end))
+	timers[bufnr]:start(
+		150,
+		0,
+		vim.schedule_wrap(function()
+			if timers[bufnr] then
+				timers[bufnr]:close()
+				timers[bufnr] = nil
+			end
+			M.refresh(bufnr)
+		end)
+	)
 end
 
 function M.disable()
