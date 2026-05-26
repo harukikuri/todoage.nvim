@@ -1,34 +1,14 @@
 local ns = vim.api.nvim_create_namespace("todoage")
 
-vim.api.nvim_set_hl(0, "TodoageFresh", { link = "Comment", default = true })
-vim.api.nvim_set_hl(0, "TodoageAging", { link = "Comment", default = true })
-vim.api.nvim_set_hl(0, "TodoageStale", { link = "Comment", default = true })
-vim.api.nvim_set_hl(0, "TodoageFossil", { link = "Comment", default = true })
+vim.api.nvim_set_hl(0, "TodoageAge", { link = "Comment", default = true })
 vim.api.nvim_set_hl(0, "TodoageUncommitted", { link = "Comment", default = true })
 
 local config = {
 	keywords = { "TODO", "FIXME", "HACK" },
-	tiers = {
-		aging = 7,
-		stale = 30,
-		fossil = 180,
-	},
 	format = function(age_days)
 		return string.format("(%d days)", age_days)
 	end,
 }
-
-local function tier_hl(age_days)
-	if age_days < config.tiers.aging then
-		return "TodoageFresh"
-	elseif age_days < config.tiers.stale then
-		return "TodoageAging"
-	elseif age_days < config.tiers.fossil then
-		return "TodoageStale"
-	else
-		return "TodoageFossil"
-	end
-end
 
 local patterns = {}
 
@@ -123,7 +103,7 @@ local function render(bufnr, blame_map, now)
 				elseif entry then
 					local age_days = math.floor((now - entry) / 86400)
 					vim.api.nvim_buf_set_extmark(bufnr, ns, lnum, 0, {
-						virt_text = { { config.format(age_days), tier_hl(age_days) } },
+						virt_text = { { config.format(age_days), "TodoageAge" } },
 						virt_text_pos = "eol",
 					})
 				end
@@ -250,7 +230,6 @@ end
 M._test = {
 	parse_blame = parse_blame,
 	line_matches = line_matches,
-	tier_hl = tier_hl,
 	rebuild_patterns = rebuild_patterns,
 }
 
