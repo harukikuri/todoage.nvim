@@ -72,6 +72,30 @@ local function parse_blame(output)
 	return result
 end
 
+-- Comment nodes are named differently across grammars (`comment`,
+-- `line_comment`, `block_comment`). Build a query from whichever names the
+-- language actually defines so we can jump straight to comment nodes instead
+-- of walking every node in the tree. Cached per language; `false` means the
+-- grammar has no comment-like node and we fall back to a full walk.
+local comment_queries = {}
+
+local function comment_query(lang)
+	local cached = comment_queries[lang]
+	if cached ~= nil then
+		return cached or nil
+	end
+	local parts = {}
+	for _, name in ipairs({ "comment", "line_comment", "block_comment" }) do
+		local pattern = "(" .. name .. ") @c"
+		if pcall(vim.treesitter.query.parse, lang, pattern) then
+			parts[#parts + 1] = pattern
+		end
+	end
+	local query = #parts > 0 and vim.treesitter.query.parse(lang, table.concat(parts, " ")) or false
+	comment_queries[lang] = query
+	return query or nil
+end
+
 local function render(bufnr, blame_map, now)
 	if not vim.api.nvim_buf_is_valid(bufnr) then
 		return
@@ -111,16 +135,24 @@ local function render(bufnr, blame_map, now)
 		end
 	end
 
-	local function visit(node)
-		if node:type():find("comment") then
+	local root = parser:parse()[1]:root()
+	local query = comment_query(parser:lang())
+
+	if query then
+		for _, node in query:iter_captures(root, bufnr, 0, -1) do
 			scan_comment(node)
 		end
-		for child in node:iter_children() do
-			visit(child)
+	else
+		local function visit(node)
+			if node:type():find("comment") then
+				scan_comment(node)
+			end
+			for child in node:iter_children() do
+				visit(child)
+			end
 		end
+		visit(root)
 	end
-
-	visit(parser:parse()[1]:root())
 end
 
 local enabled = true
