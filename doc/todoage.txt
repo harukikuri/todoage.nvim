@@ -1,6 +1,6 @@
 *todoage.txt*           Display TODO comment age as inline virtual text
 
-Author:  kuri-sun
+Author:  harukikuri
 License: MIT
 
 ==============================================================================

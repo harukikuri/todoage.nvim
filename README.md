@@ -14,7 +14,7 @@ Neovim plugin that displays the age of TODO comments as inline virtual text.
 
 ```lua
 {
-  "kuri-sun/todoage.nvim",
+  "harukikuri/todoage.nvim",
 }
 ```
 

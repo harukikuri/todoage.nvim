@@ -4,7 +4,7 @@ Thanks for your interest in improving todoage.nvim! Bug reports, fixes, docs, an
 
 ## Scope
 
-todoage.nvim is intentionally small: it adds end-of-line age annotations to TODO-style comments and nothing else. It deliberately does **not** highlight keywords, build a quickfix list, or affect search — that keeps it composable with plugins like `todo-comments.nvim`. Features that preserve this focus (or that compose with other plugins rather than absorbing them) are the easiest to accept. If you're unsure whether an idea fits, open a [discussion](https://github.com/kuri-sun/todoage.nvim/discussions) before writing code.
+todoage.nvim is intentionally small: it adds end-of-line age annotations to TODO-style comments and nothing else. It deliberately does **not** highlight keywords, build a quickfix list, or affect search — that keeps it composable with plugins like `todo-comments.nvim`. Features that preserve this focus (or that compose with other plugins rather than absorbing them) are the easiest to accept. If you're unsure whether an idea fits, open a [discussion](https://github.com/harukikuri/todoage.nvim/discussions) before writing code.
 
 ## Prerequisites
 
@@ -61,7 +61,7 @@ Use clear, conventional-style prefixes (`fix:`, `feat:`, `perf:`, `docs:`, `chor
 
 ## Reporting bugs and requesting features
 
-Please use the [issue templates](https://github.com/kuri-sun/todoage.nvim/issues/new/choose). For usage questions and general help, open a [discussion](https://github.com/kuri-sun/todoage.nvim/discussions) instead. The `:checkhealth todoage` output is the fastest way to diagnose a setup problem — include it with bug reports.
+Please use the [issue templates](https://github.com/harukikuri/todoage.nvim/issues/new/choose). For usage questions and general help, open a [discussion](https://github.com/harukikuri/todoage.nvim/discussions) instead. The `:checkhealth todoage` output is the fastest way to diagnose a setup problem — include it with bug reports.
 
 ## License
 

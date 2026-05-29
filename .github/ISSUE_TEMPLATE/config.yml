@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Question or usage help
-    url: https://github.com/kuri-sun/todoage.nvim/discussions
+    url: https://github.com/harukikuri/todoage.nvim/discussions
     about: For setup help, configuration questions, and general discussion, please open a discussion instead of an issue.
