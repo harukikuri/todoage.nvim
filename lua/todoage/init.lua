@@ -162,6 +162,9 @@ function M.refresh(bufnr)
 		return
 	end
 	bufnr = bufnr or vim.api.nvim_get_current_buf()
+	if not vim.api.nvim_buf_is_valid(bufnr) then
+		return
+	end
 	local filepath = vim.api.nvim_buf_get_name(bufnr)
 	if filepath == "" then
 		return
