@@ -98,8 +98,8 @@ Default: >lua
 :Todoage                Refresh annotations on the current buffer.
 
                                                               *:TodoageEnable*
-:TodoageEnable          Resume auto-refresh and re-annotate the current
-                        buffer.
+:TodoageEnable          Resume auto-refresh and re-annotate all loaded
+                        buffers.
 
                                                              *:TodoageDisable*
 :TodoageDisable         Clear all annotations and pause auto-refresh.
