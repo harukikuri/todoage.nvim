@@ -21,7 +21,7 @@ Neovim plugin that displays the age of TODO comments as inline virtual text.
 ## Usage
 
 - `:Todoage` - refresh the current buffer
-- `:TodoageEnable` - resume auto-refresh and re-annotate the current buffer
+- `:TodoageEnable` - resume auto-refresh and re-annotate all loaded buffers
 - `:TodoageDisable` - clear all annotations and pause auto-refresh
 - `:TodoageToggle` - enable/disable
 
