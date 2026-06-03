@@ -342,7 +342,11 @@ function M.setup(opts)
 
 	local group = vim.api.nvim_create_augroup("todoage", { clear = true })
 
-	vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost" }, {
+	-- BufEnter catches git state that changed while the buffer sat in the
+	-- background (commit, checkout, rebase): the persisted extmarks would
+	-- otherwise stay stale until the next save or focus. The blame cache keeps
+	-- a switch into an unchanged buffer cheap (a stat, no git spawn).
+	vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost", "BufEnter" }, {
 		group = group,
 		callback = function(args)
 			debounced_refresh(args.buf)
