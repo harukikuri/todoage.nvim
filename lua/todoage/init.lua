@@ -157,6 +157,80 @@ end
 
 local enabled = true
 
+-- Git-blame output for a file changes only when the file on disk changes or
+-- git state moves (commit, checkout, rebase, stage). We cache the parsed blame
+-- keyed by a cheap fingerprint of both, so repeated refreshes (notably the
+-- FocusGained spam) re-render from cache instead of spawning git every time.
+local blame_cache = {}
+local gitdir_cache = {}
+
+-- Resolve the git directory for `start_dir`, handling worktrees/submodules
+-- where `.git` is a file containing `gitdir: <path>`. Returns the git dir, or
+-- nil when not inside a repository.
+local function locate_gitdir(start_dir)
+	local found = vim.fs.find(".git", { upward = true, path = start_dir, limit = 1 })[1]
+	if not found then
+		return nil
+	end
+	local st = vim.uv.fs_stat(found)
+	if not st then
+		return nil
+	end
+	if st.type == "directory" then
+		return found
+	end
+	if st.type == "file" then
+		local fd = io.open(found, "r")
+		if not fd then
+			return nil
+		end
+		local first = fd:read("*l")
+		fd:close()
+		local target = first and first:match("^gitdir:%s*(.+)%s*$")
+		if not target then
+			return nil
+		end
+		if not target:match("^/") then
+			target = vim.fs.dirname(found) .. "/" .. target
+		end
+		return vim.fs.normalize(target)
+	end
+	return nil
+end
+
+local function resolve_gitdir(dir)
+	local cached = gitdir_cache[dir]
+	if cached ~= nil then
+		return cached or nil
+	end
+	local gitdir = locate_gitdir(dir) or false
+	gitdir_cache[dir] = gitdir
+	return gitdir or nil
+end
+
+-- A string that changes whenever blame output could differ: the file's
+-- mtime/size plus the mtime of the git dir's HEAD and index. Returns nil if
+-- the file no longer exists. stat'ing a handful of paths is microseconds,
+-- versus spawning git and walking history.
+local function fingerprint(filepath, gitdir)
+	local st = vim.uv.fs_stat(filepath)
+	if not st then
+		return nil
+	end
+	local parts = { st.mtime.sec, st.mtime.nsec, st.size }
+	if gitdir then
+		for _, name in ipairs({ "HEAD", "index" }) do
+			local gst = vim.uv.fs_stat(gitdir .. "/" .. name)
+			if gst then
+				parts[#parts + 1] = name
+				parts[#parts + 1] = gst.mtime.sec
+				parts[#parts + 1] = gst.mtime.nsec
+			end
+		end
+	end
+	return table.concat(parts, ":")
+end
+
 function M.refresh(bufnr)
 	if not enabled then
 		return
@@ -171,11 +245,20 @@ function M.refresh(bufnr)
 	end
 
 	local now = os.time()
+	local dir = vim.fs.dirname(filepath)
+	local gitdir = resolve_gitdir(dir)
+	local fp = fingerprint(filepath, gitdir)
+
+	local cached = blame_cache[filepath]
+	if cached and fp and cached.fp == fp then
+		render(bufnr, cached.map, now)
+		return
+	end
 
 	vim.system({
 		"git",
 		"-C",
-		vim.fs.dirname(filepath),
+		dir,
 		"blame",
 		"--line-porcelain",
 		"--",
@@ -185,6 +268,7 @@ function M.refresh(bufnr)
 			return
 		end
 		local blame_map = parse_blame(obj.stdout)
+		blame_cache[filepath] = { fp = fp, map = blame_map }
 		vim.schedule(function()
 			render(bufnr, blame_map, now)
 		end)
@@ -271,6 +355,8 @@ M._test = {
 	parse_blame = parse_blame,
 	line_matches = line_matches,
 	rebuild_patterns = rebuild_patterns,
+	fingerprint = fingerprint,
+	locate_gitdir = locate_gitdir,
 }
 
 return M
