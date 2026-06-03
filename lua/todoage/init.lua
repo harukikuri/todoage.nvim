@@ -296,6 +296,16 @@ local function debounced_refresh(bufnr)
 	)
 end
 
+local function loaded_buffers()
+	local bufs = {}
+	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+		if vim.api.nvim_buf_is_loaded(bufnr) then
+			bufs[#bufs + 1] = bufnr
+		end
+	end
+	return bufs
+end
+
 function M.disable()
 	enabled = false
 
@@ -305,20 +315,16 @@ function M.disable()
 		timers[bufnr] = nil
 	end
 
-	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-		if vim.api.nvim_buf_is_loaded(bufnr) then
-			vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-		end
+	for _, bufnr in ipairs(loaded_buffers()) do
+		vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
 	end
 end
 
 function M.enable()
 	enabled = true
 
-	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-		if vim.api.nvim_buf_is_loaded(bufnr) then
-			M.refresh(bufnr)
-		end
+	for _, bufnr in ipairs(loaded_buffers()) do
+		M.refresh(bufnr)
 	end
 end
 
@@ -343,10 +349,15 @@ function M.setup(opts)
 		end,
 	})
 
+	-- Refresh every loaded buffer, not just the current one: git state may
+	-- have changed for any of them while Neovim was in the background. The
+	-- blame cache makes unchanged buffers cheap (a stat, no git spawn).
 	vim.api.nvim_create_autocmd("FocusGained", {
 		group = group,
 		callback = function()
-			debounced_refresh(vim.api.nvim_get_current_buf())
+			for _, bufnr in ipairs(loaded_buffers()) do
+				debounced_refresh(bufnr)
+			end
 		end,
 	})
 end
