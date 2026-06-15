@@ -8,8 +8,8 @@ Neovim plugin that displays the age of TODO comments as inline virtual text.
 
 ## Requirements
 
-- Neovim 0.10+ (for `vim.system`)
-- `git` on `PATH`
+- Neovim 0.10+
+- `git`
 - A tree-sitter parser installed for the languages you want annotated (`:TSInstall <lang>`)
 
 ## Installation
@@ -23,9 +23,7 @@ Neovim plugin that displays the age of TODO comments as inline virtual text.
 ## Usage
 
 - `:Todoage` - refresh the current buffer
-- `:TodoageEnable` - resume auto-refresh and re-annotate all loaded buffers
-- `:TodoageDisable` - clear all annotations and pause auto-refresh
-- `:TodoageToggle` - enable/disable
+- `:TodoageToggle` - toggle annotations and auto-refresh on/off
 
 ## Configuration
 
@@ -42,18 +40,16 @@ opts = {
 
 `format` receives the age in days and must return a string. It controls only the text; the highlight color is applied separately. Errors in your `format` function are not caught — fix the function if annotations stop appearing.
 
-## Highlights
-
-| Group                | Applies to              | Default highlight |
-| -------------------- | ----------------------- | ----------------- |
-| `TodoageAge`         | committed age annotation | `Comment`         |
-| `TodoageUncommitted` | not yet in git          | `Comment`         |
-
-By default annotations render muted — the age number itself carries the signal. Override `TodoageAge` to make annotations visually louder. See [Customizing colors](#customizing-colors).
-
 ## Customizing colors
 
-Colors are not exposed through `setup({})` — set the highlight groups directly. This way colorschemes can ship `Todoage*` definitions that just work.
+Two highlight groups, both linked to `Comment` by default:
+
+| Group                | Applies to               | Default highlight |
+| -------------------- | ------------------------ | ----------------- |
+| `TodoageAge`         | committed age annotation | `Comment`         |
+| `TodoageUncommitted` | not yet in git           | `Comment`         |
+
+By default annotations render muted — the age number itself carries the signal. Colors are not exposed through `setup({})`; set the highlight groups directly so colorschemes can ship `Todoage*` definitions that just work.
 
 ```lua
 vim.api.nvim_set_hl(0, "TodoageAge",         { fg = "#d7af5f" })

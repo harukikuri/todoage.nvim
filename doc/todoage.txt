@@ -34,7 +34,7 @@ becomes (visually, not on disk): >
 2. REQUIREMENTS                                         *todoage-requirements*
 
 - Neovim 0.10+
-- `git` on $PATH
+- `git`
 - A tree-sitter parser for the filetype you want annotated.
   Files without a parser are silently skipped.
 
@@ -97,15 +97,11 @@ Default: >lua
                                                                     *:Todoage*
 :Todoage                Refresh annotations on the current buffer.
 
-                                                              *:TodoageEnable*
-:TodoageEnable          Resume auto-refresh and re-annotate all loaded
-                        buffers.
-
-                                                             *:TodoageDisable*
-:TodoageDisable         Clear all annotations and pause auto-refresh.
-
                                                               *:TodoageToggle*
-:TodoageToggle          Toggle enable/disable.
+:TodoageToggle          Toggle annotations and auto-refresh on or off. When
+                        disabling, clears all annotations and pauses
+                        auto-refresh; when enabling, re-annotates all loaded
+                        buffers.
 
 ==============================================================================
 6. HIGHLIGHTS                                             *todoage-highlights*
