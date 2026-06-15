@@ -61,7 +61,7 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 
 ## Coexistence with other TODO plugins
 
-Designed to complement `todo-comments.nvim` and similar plugins. `todoage.nvim` only adds end-of-line age annotations — it does not highlight the keyword itself, provide a quickfix list, or affect search.
+Designed to complement `todo-comments.nvim` and similar plugins.
 
 ## License
 
