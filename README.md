@@ -8,8 +8,7 @@ Neovim plugin that displays the age of TODO comments as inline virtual text.
 
 ## Requirements
 
-- Neovim 0.10+
-- `git`
+- Git
 - A tree-sitter parser installed for the languages you want annotated (`:TSInstall <lang>`)
 
 ## Installation
