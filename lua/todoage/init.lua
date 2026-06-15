@@ -164,6 +164,18 @@ local enabled = true
 local blame_cache = {}
 local gitdir_cache = {}
 
+-- vim.system raises synchronously when the program is not on PATH, so a machine
+-- without git would otherwise throw on every buffer event. Probe once and
+-- memoize; nil means "not yet probed".
+local git_available
+
+local function has_git()
+	if git_available == nil then
+		git_available = vim.fn.executable("git") == 1
+	end
+	return git_available
+end
+
 -- Resolve the git directory for `start_dir`, handling worktrees/submodules
 -- where `.git` is a file containing `gitdir: <path>`. Returns the git dir, or
 -- nil when not inside a repository.
@@ -247,6 +259,20 @@ function M.refresh(bufnr)
 	local now = os.time()
 	local dir = vim.fs.dirname(filepath)
 	local gitdir = resolve_gitdir(dir)
+
+	-- Outside a git repo there is nothing to blame; skip the spawn entirely.
+	-- This is the common case for scratch buffers and untracked trees, and it
+	-- also avoids the has_git() error path below for non-repo files.
+	if not gitdir then
+		return
+	end
+
+	-- vim.system raises synchronously if git is missing, which would turn every
+	-- buffer event into an error on a machine without git.
+	if not has_git() then
+		return
+	end
+
 	local fp = fingerprint(filepath, gitdir)
 
 	local cached = blame_cache[filepath]
@@ -372,6 +398,9 @@ M._test = {
 	rebuild_patterns = rebuild_patterns,
 	fingerprint = fingerprint,
 	locate_gitdir = locate_gitdir,
+	set_git_available = function(v)
+		git_available = v
+	end,
 }
 
 return M
