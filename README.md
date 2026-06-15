@@ -35,9 +35,10 @@ opts = {
 }
 ```
 
-`keywords` replaces the default list wholesale, not merges. If you want the defaults plus extras, list them all. Each keyword must contain only letters, digits, and underscores — `setup()` raises an error otherwise.
-
-`format` receives the age in days and must return a string. It controls only the text; the highlight color is applied separately. Errors in your `format` function are not caught — fix the function if annotations stop appearing.
+| Option     | Notes                                                                  |
+| ---------- | ---------------------------------------------------------------------- |
+| `keywords` | Replaces defaults wholesale; list everything you want. Letters, digits, and underscores only. |
+| `format`   | Gets age in days, returns the label string. Not error-guarded.         |
 
 ## Customizing colors
 
