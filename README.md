@@ -54,5 +54,5 @@ Designed to complement `todo-comments.nvim` and similar plugins.
 ## Star history
 
 <a href="https://star-history.com/#harukikuri/todoage.nvim&Date">
-  <img src="https://api.star-history.com/svg?repos=harukikuri/todoage.nvim&type=Date" alt="Star History Chart" width="600">
+  <img src="https://api.star-history.com/svg?repos=harukikuri/todoage.nvim&type=Date" alt="Star History Chart" width="700">
 </a>
