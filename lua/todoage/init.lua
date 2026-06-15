@@ -332,6 +332,26 @@ local function loaded_buffers()
 	return bufs
 end
 
+-- Drop per-buffer state when a buffer is wiped/deleted. The blame cache is
+-- keyed by file path and the debounce timer by bufnr; neither is reused once
+-- the buffer is gone, so without this they accumulate for the life of the
+-- session. gitdir_cache is keyed by directory and shared across buffers, so it
+-- is intentionally left alone here.
+local function cleanup_buffer(bufnr)
+	local timer = timers[bufnr]
+	if timer then
+		timer:stop()
+		timer:close()
+		timers[bufnr] = nil
+	end
+	if vim.api.nvim_buf_is_valid(bufnr) then
+		local filepath = vim.api.nvim_buf_get_name(bufnr)
+		if filepath ~= "" then
+			blame_cache[filepath] = nil
+		end
+	end
+end
+
 function M.disable()
 	enabled = false
 
@@ -390,6 +410,15 @@ function M.setup(opts)
 			end
 		end,
 	})
+
+	-- Reclaim a buffer's cache entry and debounce timer once it is gone, so a
+	-- long session that churns through many files does not leak them.
+	vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout" }, {
+		group = group,
+		callback = function(args)
+			cleanup_buffer(args.buf)
+		end,
+	})
 end
 
 M._test = {
@@ -401,6 +430,8 @@ M._test = {
 	set_git_available = function(v)
 		git_available = v
 	end,
+	blame_cache = blame_cache,
+	timers = timers,
 }
 
 return M
