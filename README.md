@@ -42,8 +42,6 @@ opts = {
 
 ## Customizing colors
 
-Two groups, both linked to `Comment` by default: `TodoageAge` (committed) and `TodoageUncommitted` (not yet in git). There's no `setup({})` color option — set them directly:
-
 ```lua
 vim.api.nvim_set_hl(0, "TodoageAge",         { fg = "#d7af5f" })
 vim.api.nvim_set_hl(0, "TodoageUncommitted", { fg = "#5f5f5f", italic = true })
@@ -53,6 +51,6 @@ vim.api.nvim_set_hl(0, "TodoageUncommitted", { fg = "#5f5f5f", italic = true })
 
 Designed to complement `todo-comments.nvim` and similar plugins.
 
-## License
+## Star history
 
-MIT
+[![Star History Chart](https://api.star-history.com/svg?repos=harukikuri/todoage.nvim&type=Date)](https://star-history.com/#harukikuri/todoage.nvim&Date)
