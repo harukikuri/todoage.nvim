@@ -41,14 +41,7 @@ opts = {
 
 ## Customizing colors
 
-Two highlight groups, both linked to `Comment` by default:
-
-| Group                | Applies to               | Default highlight |
-| -------------------- | ------------------------ | ----------------- |
-| `TodoageAge`         | committed age annotation | `Comment`         |
-| `TodoageUncommitted` | not yet in git           | `Comment`         |
-
-By default annotations render muted — the age number itself carries the signal. Colors are not exposed through `setup({})`; set the highlight groups directly so colorschemes can ship `Todoage*` definitions that just work.
+Annotations use two highlight groups — `TodoageAge` (committed age) and `TodoageUncommitted` (not yet in git) — both linked to `Comment` by default, so they render muted and the age number itself carries the signal. Colors are not exposed through `setup({})`; set the highlight groups directly so colorschemes can ship `Todoage*` definitions that just work.
 
 ```lua
 vim.api.nvim_set_hl(0, "TodoageAge",         { fg = "#d7af5f" })
