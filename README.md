@@ -48,17 +48,6 @@ vim.api.nvim_set_hl(0, "TodoageAge",         { fg = "#d7af5f" })
 vim.api.nvim_set_hl(0, "TodoageUncommitted", { fg = "#5f5f5f", italic = true })
 ```
 
-`:colorscheme` wipes all highlight groups. To have overrides survive theme switches, wrap them in a `ColorScheme` autocmd:
-
-```lua
-vim.api.nvim_create_autocmd("ColorScheme", {
-  callback = function()
-    vim.api.nvim_set_hl(0, "TodoageAge", { fg = "#d7af5f", bold = true })
-    -- ...other overrides
-  end,
-})
-```
-
 ## Coexistence with other TODO plugins
 
 Designed to complement `todo-comments.nvim` and similar plugins.
