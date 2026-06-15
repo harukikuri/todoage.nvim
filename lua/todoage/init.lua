@@ -96,6 +96,26 @@ local function comment_query(lang)
 	return query or nil
 end
 
+-- Run the user's format function defensively: a throw or a non-string return
+-- would otherwise abort the whole render (and, in the async path, surface as an
+-- error from a scheduled callback), silently dropping every annotation in the
+-- buffer. On failure we skip that one annotation and warn once so a typo in
+-- `format` is diagnosable rather than invisible.
+local format_warned = false
+
+local function safe_format(age_days)
+	local ok, result = pcall(config.format, age_days)
+	if ok and type(result) == "string" then
+		return result
+	end
+	if not format_warned then
+		format_warned = true
+		local detail = ok and ("returned a " .. type(result) .. ", expected string") or tostring(result)
+		vim.notify("todoage: `format` " .. detail .. " — annotations skipped", vim.log.levels.ERROR)
+	end
+	return nil
+end
+
 local function render(bufnr, blame_map, now)
 	if not vim.api.nvim_buf_is_valid(bufnr) then
 		return
@@ -126,10 +146,13 @@ local function render(bufnr, blame_map, now)
 					})
 				elseif entry then
 					local age_days = math.floor((now - entry) / 86400)
-					vim.api.nvim_buf_set_extmark(bufnr, ns, lnum, 0, {
-						virt_text = { { config.format(age_days), "TodoageAge" } },
-						virt_text_pos = "eol",
-					})
+					local text = safe_format(age_days)
+					if text then
+						vim.api.nvim_buf_set_extmark(bufnr, ns, lnum, 0, {
+							virt_text = { { text, "TodoageAge" } },
+							virt_text_pos = "eol",
+						})
+					end
 				end
 			end
 		end
@@ -212,12 +235,18 @@ end
 
 local function resolve_gitdir(dir)
 	local cached = gitdir_cache[dir]
-	if cached ~= nil then
-		return cached or nil
+	if cached then
+		return cached
 	end
-	local gitdir = locate_gitdir(dir) or false
-	gitdir_cache[dir] = gitdir
-	return gitdir or nil
+	-- Only cache positive results. A "not a repo" verdict is deliberately not
+	-- cached so that running `git init` (or opening a new worktree) mid-session
+	-- is picked up on the next refresh. Re-probing a non-repo dir is a cheap
+	-- upward `.git` walk, and such files skip the git spawn entirely anyway.
+	local gitdir = locate_gitdir(dir)
+	if gitdir then
+		gitdir_cache[dir] = gitdir
+	end
+	return gitdir
 end
 
 -- A string that changes whenever blame output could differ: the file's
@@ -385,6 +414,8 @@ end
 function M.setup(opts)
 	config = vim.tbl_deep_extend("force", config, opts or {})
 	rebuild_patterns()
+	-- Re-arm the format warning: a new config may swap in a working function.
+	format_warned = false
 
 	local group = vim.api.nvim_create_augroup("todoage", { clear = true })
 
@@ -432,6 +463,8 @@ M._test = {
 	end,
 	blame_cache = blame_cache,
 	timers = timers,
+	resolve_gitdir = resolve_gitdir,
+	safe_format = safe_format,
 }
 
 return M

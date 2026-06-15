@@ -38,7 +38,7 @@ opts = {
 | Option     | Notes                                                                  |
 | ---------- | ---------------------------------------------------------------------- |
 | `keywords` | Replaces defaults wholesale; list everything you want. Letters, digits, and underscores only. |
-| `format`   | Gets age in days, returns the label string. Not error-guarded.         |
+| `format`   | Gets age in days, returns the label string. A throw or non-string warns once and skips. |
 
 ## Customizing colors
 
