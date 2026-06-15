@@ -80,8 +80,9 @@ format                                                        *todoage-format*
 Function taking the age in days and returning the string to render. The
 |todoage-highlights| highlight is applied to whatever string you return.
 
-Errors in your format function are not caught — fix the function if
-annotations stop appearing.
+If your format function throws or returns a non-string, todoage warns once
+(via |vim.notify()|) and skips those annotations rather than erroring. Fix the
+function and they reappear.
 
 Default: >lua
 
