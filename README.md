@@ -1,7 +1,5 @@
 # todoage.nvim ⏳
 
-[![GitHub release](https://img.shields.io/github/v/release/harukikuri/todoage.nvim)](https://github.com/harukikuri/todoage.nvim/releases/latest)
-
 Neovim plugin that displays the age of TODO comments as inline virtual text.
 
 ![demo](assets/demo.png)
