@@ -43,28 +43,44 @@ local M = {}
 
 local UNCOMMITTED_SHA = string.rep("0", 40)
 
+-- Parse `git blame --line-porcelain` into a map of line number -> blame entry.
+-- Committed lines map to `{ time, author, sha }`; uncommitted lines to `false`;
+-- lines with no blame are absent. `--line-porcelain` repeats the full header
+-- for every line, so author/sha are available per line, not just per commit.
 local function parse_blame(output)
 	local result = {}
 	local current_lnum = nil
 	local current_time = nil
+	local current_author = nil
+	local current_sha = nil
 	local current_committed = nil
 	for line in output:gmatch("[^\n]+") do
 		local sha, final = line:match("^(%x+) %d+ (%d+)")
 		if sha and #sha == 40 then
 			current_lnum = tonumber(final)
+			current_sha = sha
 			current_committed = sha ~= UNCOMMITTED_SHA
 		else
+			local author = line:match("^author (.+)")
 			local time = line:match("^author%-time (%d+)")
-			if time then
+			if author then
+				current_author = author
+			elseif time then
 				current_time = tonumber(time)
 			elseif line:sub(1, 1) == "\t" and current_lnum and current_time then
 				if current_committed then
-					result[current_lnum] = current_time
+					result[current_lnum] = {
+						time = current_time,
+						author = current_author,
+						sha = current_sha,
+					}
 				else
 					result[current_lnum] = false
 				end
 				current_lnum = nil
 				current_time = nil
+				current_author = nil
+				current_sha = nil
 				current_committed = nil
 			end
 		end
@@ -103,8 +119,8 @@ end
 -- `format` is diagnosable rather than invisible.
 local format_warned = false
 
-local function safe_format(age_days)
-	local ok, result = pcall(config.format, age_days)
+local function safe_format(age_days, info)
+	local ok, result = pcall(config.format, age_days, info)
 	if ok and type(result) == "string" then
 		return result
 	end
@@ -145,8 +161,13 @@ local function render(bufnr, blame_map, now)
 						virt_text_pos = "eol",
 					})
 				elseif entry then
-					local age_days = math.floor((now - entry) / 86400)
-					local text = safe_format(age_days)
+					local age_days = math.floor((now - entry.time) / 86400)
+					local text = safe_format(age_days, {
+						age_days = age_days,
+						author = entry.author,
+						sha = entry.sha,
+						time = entry.time,
+					})
 					if text then
 						vim.api.nvim_buf_set_extmark(bufnr, ns, lnum, 0, {
 							virt_text = { { text, "TodoageAge" } },

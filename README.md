@@ -38,7 +38,15 @@ opts = {
 | Option     | Notes                                                                  |
 | ---------- | ---------------------------------------------------------------------- |
 | `keywords` | Replaces defaults wholesale; list everything you want. Letters, digits, and underscores only. |
-| `format`   | Gets age in days, returns the label string. A throw or non-string warns once and skips. |
+| `format`   | Receives `(age_days, info)`, returns the label string. `info` = `{ author, sha, time }` from git blame. A throw or non-string warns once and skips. |
+
+The second `format` argument carries the blame data for the line, so you can show more than just the age:
+
+```lua
+format = function(age_days, info)
+  return string.format("(%d days, %s)", age_days, info.author)
+end
+```
 
 ## Customizing colors
 

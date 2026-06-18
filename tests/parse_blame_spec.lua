@@ -24,17 +24,19 @@ describe("parse_blame", function()
 		assert.are.same({}, parse_blame(""))
 	end)
 
-	it("parses a single committed line", function()
+	it("parses a single committed line with time, author, and sha", function()
 		local result = parse_blame(block(SHA_A, 1, 1700000000))
-		assert.are.same({ [1] = 1700000000 }, result)
+		assert.are.same({
+			[1] = { time = 1700000000, author = "Alice", sha = SHA_A },
+		}, result)
 	end)
 
 	it("parses multiple committed lines from different commits", function()
 		local input = block(SHA_A, 1, 1700000000) .. "\n" .. block(SHA_B, 2, 1700100000)
 		local result = parse_blame(input)
 		assert.are.same({
-			[1] = 1700000000,
-			[2] = 1700100000,
+			[1] = { time = 1700000000, author = "Alice", sha = SHA_A },
+			[2] = { time = 1700100000, author = "Alice", sha = SHA_B },
 		}, result)
 	end)
 
@@ -47,7 +49,7 @@ describe("parse_blame", function()
 		local input = block(SHA_A, 1, 1700000000) .. "\n" .. block(SHA_ZERO, 2, 1700100000)
 		local result = parse_blame(input)
 		assert.are.same({
-			[1] = 1700000000,
+			[1] = { time = 1700000000, author = "Alice", sha = SHA_A },
 			[2] = false,
 		}, result)
 	end)
