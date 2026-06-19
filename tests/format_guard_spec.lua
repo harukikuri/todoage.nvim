@@ -48,4 +48,21 @@ describe("safe_format", function()
 		})
 		assert.is_nil(safe_format(5))
 	end)
+
+	it("forwards the info context table to format", function()
+		local seen
+		todoage.setup({
+			format = function(age_days, info)
+				seen = info
+				return tostring(age_days)
+			end,
+		})
+
+		safe_format(7, { age_days = 7, author = "Bob", sha = "deadbeef", time = 123 })
+
+		assert.is_table(seen)
+		assert.are.equal("Bob", seen.author)
+		assert.are.equal("deadbeef", seen.sha)
+		assert.are.equal(123, seen.time)
+	end)
 end)

@@ -77,12 +77,26 @@ Default: >lua
 ------------------------------------------------------------------------------
 format                                                        *todoage-format*
 
-Function taking the age in days and returning the string to render. The
-|todoage-highlights| highlight is applied to whatever string you return.
+Function taking the age in days and an `info` table, returning the string to
+render. The |todoage-highlights| highlight is applied to whatever string you
+return.
+
+`info` carries the git-blame data for the line:
+    info.age_days   Age in days (same as the first argument).
+    info.author     Author name.
+    info.sha        Full commit SHA.
+    info.time       Author timestamp (epoch seconds).
 
 If your format function throws or returns a non-string, todoage warns once
 (via |vim.notify()|) and skips those annotations rather than erroring. Fix the
 function and they reappear.
+
+Example showing the author: >lua
+
+    format = function(age_days, info)
+      return string.format("(%d days, %s)", age_days, info.author)
+    end
+<
 
 Default: >lua
 
