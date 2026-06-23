@@ -1,0 +1,35 @@
+---
+# Minimal selene standard library for Neovim plugins. `vim` is declared as an
+# opaque struct (any field access allowed) so selene recognizes the global
+# without us having to enumerate the whole API. The busted globals let the test
+# specs lint cleanly under the same config.
+base: lua51
+globals:
+  vim:
+    any: true
+  describe:
+    args:
+      - type: "..."
+  it:
+    args:
+      - type: "..."
+  before_each:
+    args:
+      - type: "..."
+  after_each:
+    args:
+      - type: "..."
+  pending:
+    args:
+      - type: "..."
+  setup:
+    args:
+      - type: "..."
+  teardown:
+    args:
+      - type: "..."
+  # luassert exposes deep chains (assert.are.same, assert.is_true,
+  # assert.has_no.errors); the wildcard lets any of them through. `assert`
+  # itself is a function in the lua51 base and can't be overridden directly.
+  "assert.*":
+    any: true

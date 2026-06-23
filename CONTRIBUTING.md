@@ -11,6 +11,7 @@ todoage.nvim is intentionally small: it adds end-of-line age annotations to TODO
 - **Neovim 0.10+** (the plugin uses `vim.system`)
 - **git** on your `PATH`
 - **[StyLua](https://github.com/JohnnyMorganz/StyLua)** for formatting
+- **[selene](https://github.com/Kampfkarren/selene)** for linting
 - A tree-sitter parser for any language you test against (`:TSInstall <lang>`)
 
 Test dependencies (plenary.nvim) are fetched automatically the first time you run the tests.
@@ -43,6 +44,14 @@ Formatting is enforced by StyLua in CI (config in `.stylua.toml`: tabs, 120-colu
 ```sh
 make fmt        # format in place
 make fmt-check  # verify formatting (what CI runs)
+```
+
+## Linting
+
+[selene](https://github.com/Kampfkarren/selene) catches logic-level issues StyLua can't — unused locals, undefined globals, variable shadowing. Its config lives in `selene.toml`, with a small standard library in `vim.yml` that teaches selene about the Neovim `vim` global and the busted test globals. Lint before committing:
+
+```sh
+make lint  # what CI runs
 ```
 
 ## Project layout

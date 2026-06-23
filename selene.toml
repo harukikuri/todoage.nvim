@@ -1,0 +1,4 @@
+# stylua handles formatting; selene catches logic-level issues formatting can't:
+# unused locals, undefined globals, variable shadowing. The `vim` std (vim.yml)
+# teaches selene about Neovim's `vim` global and the busted test globals.
+std = "lua51+vim"

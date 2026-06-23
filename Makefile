@@ -1,4 +1,4 @@
-.PHONY: test fmt fmt-check
+.PHONY: test fmt fmt-check lint
 
 PLENARY_DIR := .tests/site/pack/deps/start/plenary.nvim
 
@@ -15,3 +15,6 @@ fmt:
 
 fmt-check:
 	stylua --check lua/ tests/ plugin/
+
+lint:
+	selene lua/ tests/ plugin/
