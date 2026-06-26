@@ -45,6 +45,26 @@ make fmt        # format in place
 make fmt-check  # verify formatting (what CI runs)
 ```
 
+## Documentation
+
+`doc/todoage.txt` is **generated from `README.md`** by [panvimdoc](https://github.com/kdheepak/panvimdoc) — edit the README, never the help file by hand. When a pull request changes `README.md`, the `panvimdoc` workflow regenerates the vimdoc and commits it back onto the PR branch, so the two can't drift.
+
+Markdown conventions for good vimdoc output:
+
+- Top-level sections are `#` headings (they become clean `*todoage-<section>*` tags).
+- Wrap README-only content (demo image, star-history chart) in `<!-- panvimdoc-ignore-start -->` / `<!-- panvimdoc-ignore-end -->`, with blank lines around the markers.
+
+To preview the generated doc locally (optional — CI does this for you), you need `pandoc`, then:
+
+```sh
+git clone https://github.com/kdheepak/panvimdoc /tmp/panvimdoc
+/tmp/panvimdoc/panvimdoc.sh \
+  --project-name todoage --input-file README.md \
+  --vim-version "Neovim >= 0.10" --toc true \
+  --description "Display TODO comment age as inline virtual text" \
+  --demojify true --treesitter true --dedup-subheadings true
+```
+
 ## Project layout
 
 | Path | Purpose |
@@ -53,7 +73,7 @@ make fmt-check  # verify formatting (what CI runs)
 | `lua/todoage/init.lua` | Core logic: blame parsing, comment scanning, rendering |
 | `lua/todoage/health.lua` | `:checkhealth todoage` diagnostics |
 | `tests/` | plenary specs and the minimal init used to run them |
-| `doc/` | `:help todoage` manual |
+| `doc/todoage.txt` | `:help todoage` manual — **generated from `README.md`**, do not edit by hand |
 
 ## Commit messages
 
