@@ -10,6 +10,9 @@ local config = {
 	end,
 }
 
+-- Each entry pairs a keyword with its standalone-word Lua pattern. We keep the
+-- keyword alongside the pattern so the query API (M.get) can report *which*
+-- marker matched a line, not just that one did.
 local patterns = {}
 
 local function rebuild_patterns()
@@ -23,20 +26,26 @@ local function rebuild_patterns()
 				)
 			)
 		end
-		table.insert(new_patterns, "%f[%w_]" .. kw .. "%f[^%w_]")
+		table.insert(new_patterns, { keyword = kw, pattern = "%f[%w_]" .. kw .. "%f[^%w_]" })
 	end
 	patterns = new_patterns
 end
 
 rebuild_patterns()
 
-local function line_matches(line)
-	for _, pat in ipairs(patterns) do
-		if line:find(pat) then
-			return true
+-- Returns the first keyword matched on the line, or nil. The order follows
+-- config.keywords.
+local function line_keyword(line)
+	for _, p in ipairs(patterns) do
+		if line:find(p.pattern) then
+			return p.keyword
 		end
 	end
-	return false
+	return nil
+end
+
+local function line_matches(line)
+	return line_keyword(line) ~= nil
 end
 
 local M = {}
@@ -132,6 +141,11 @@ local function safe_format(age_days, info)
 	return nil
 end
 
+-- Per-buffer snapshot of the markers found by the last render, in ascending
+-- line order. M.get returns (a copy of) this; the TodoageRefreshed event lets
+-- consumers know when it changed.
+local results_cache = {}
+
 local function render(bufnr, blame_map, now)
 	if not vim.api.nvim_buf_is_valid(bufnr) then
 		return
@@ -139,29 +153,59 @@ local function render(bufnr, blame_map, now)
 
 	vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
 
+	local results = {}
+
+	-- Single exit point: publish the snapshot and announce the render. Reached
+	-- on the early returns too, so a cleared buffer (modified / no parser)
+	-- reports an empty result set rather than stale data.
+	local function finish()
+		table.sort(results, function(a, b)
+			return a.lnum < b.lnum
+		end)
+		results_cache[bufnr] = results
+		vim.api.nvim_exec_autocmds("User", {
+			pattern = "TodoageRefreshed",
+			data = { bufnr = bufnr },
+		})
+	end
+
 	if vim.bo[bufnr].modified then
-		return
+		return finish()
 	end
 
 	local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
 	if not ok or not parser then
-		return
+		return finish()
 	end
 
 	local function scan_comment(node)
 		local srow, _, erow, _ = node:range()
 		local lines = vim.api.nvim_buf_get_lines(bufnr, srow, erow + 1, false)
 		for offset, line in ipairs(lines) do
-			if line_matches(line) then
+			local keyword = line_keyword(line)
+			if keyword then
 				local lnum = srow + offset - 1
 				local entry = blame_map[lnum + 1]
 				if entry == false then
+					-- Uncommitted: surfaced in the query API with nil blame
+					-- fields so consumers can still list the marker.
+					results[#results + 1] = { lnum = lnum + 1, keyword = keyword }
 					vim.api.nvim_buf_set_extmark(bufnr, ns, lnum, 0, {
 						virt_text = { { "(uncommitted)", "TodoageUncommitted" } },
 						virt_text_pos = "eol",
 					})
 				elseif entry then
 					local age_days = math.floor((now - entry.time) / 86400)
+					-- Record the marker regardless of whether `format` succeeds:
+					-- a bad format function is a display problem, not a reason to
+					-- hide the data from the query API.
+					results[#results + 1] = {
+						lnum = lnum + 1,
+						keyword = keyword,
+						age_days = age_days,
+						author = entry.author,
+						sha = entry.sha,
+					}
 					local text = safe_format(age_days, {
 						age_days = age_days,
 						author = entry.author,
@@ -197,6 +241,8 @@ local function render(bufnr, blame_map, now)
 		end
 		visit(root)
 	end
+
+	finish()
 end
 
 local enabled = true
@@ -394,6 +440,7 @@ local function cleanup_buffer(bufnr)
 		timer:close()
 		timers[bufnr] = nil
 	end
+	results_cache[bufnr] = nil
 	if vim.api.nvim_buf_is_valid(bufnr) then
 		local filepath = vim.api.nvim_buf_get_name(bufnr)
 		if filepath ~= "" then
@@ -414,6 +461,9 @@ function M.disable()
 	for _, bufnr in ipairs(loaded_buffers()) do
 		vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
 	end
+
+	-- Nothing is annotated while disabled, so the query API reports nothing.
+	results_cache = {}
 end
 
 function M.enable()
@@ -430,6 +480,34 @@ function M.toggle()
 	else
 		M.enable()
 	end
+end
+
+-- Public query API: the markers todoage found in `bufnr` (defaults to the
+-- current buffer) as of its last render, in ascending line order. Each entry is
+-- `{ lnum, keyword, age_days, author, sha }`; `lnum` is 1-based. Uncommitted
+-- lines have nil `age_days`/`author`/`sha`. Returns a fresh table the caller may
+-- keep or mutate. A buffer that has never rendered (or is disabled) returns {}.
+--
+-- Pairs with the `User TodoageRefreshed` autocmd (event data: `{ bufnr }`),
+-- fired after each render, so other plugins can consume todoage as a data
+-- source — Telescope pickers, a lualine "oldest TODO" segment, etc.
+function M.get(bufnr)
+	bufnr = bufnr or vim.api.nvim_get_current_buf()
+	local cached = results_cache[bufnr]
+	if not cached then
+		return {}
+	end
+	local copy = {}
+	for i, entry in ipairs(cached) do
+		copy[i] = {
+			lnum = entry.lnum,
+			keyword = entry.keyword,
+			age_days = entry.age_days,
+			author = entry.author,
+			sha = entry.sha,
+		}
+	end
+	return copy
 end
 
 function M.setup(opts)
@@ -476,6 +554,8 @@ end
 M._test = {
 	parse_blame = parse_blame,
 	line_matches = line_matches,
+	line_keyword = line_keyword,
+	render = render,
 	rebuild_patterns = rebuild_patterns,
 	fingerprint = fingerprint,
 	locate_gitdir = locate_gitdir,
