@@ -51,7 +51,7 @@ make fmt-check  # verify formatting (what CI runs)
 
 Markdown conventions for good vimdoc output:
 
-- Top-level sections are `#` headings (they become clean `*todoage-<section>*` tags).
+- Keep the README conventional: a single `#` title, `##` sections, `###` subsections. The workflow passes `shiftheadinglevelby: -1`, which makes the `#` title the doc title and lifts `##` sections to top level, so they get clean `*todoage-<section>*` tags.
 - Wrap README-only content (demo image, star-history chart) in `<!-- panvimdoc-ignore-start -->` / `<!-- panvimdoc-ignore-end -->`, with blank lines around the markers.
 
 To preview the generated doc locally (optional — CI does this for you), you need `pandoc`, then:
@@ -62,7 +62,8 @@ git clone https://github.com/kdheepak/panvimdoc /tmp/panvimdoc
   --project-name todoage --input-file README.md \
   --vim-version "Neovim >= 0.10" --toc true \
   --description "Display TODO comment age as inline virtual text" \
-  --demojify true --treesitter true --dedup-subheadings true
+  --demojify true --treesitter true --dedup-subheadings true \
+  --shift-heading-level-by -1
 ```
 
 ## Project layout

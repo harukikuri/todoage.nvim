@@ -3,49 +3,25 @@
 ==============================================================================
 Table of Contents                                  *todoage-table-of-contents*
 
-1. todoage.nvim                                         |todoage-todoage.nvim|
-2. Requirements                                         |todoage-requirements|
-3. Installation                                         |todoage-installation|
-4. Commands                                                 |todoage-commands|
-5. Configuration                                       |todoage-configuration|
+1. Requirements                                         |todoage-requirements|
+2. Installation                                         |todoage-installation|
+3. Commands                                                 |todoage-commands|
+4. Configuration                                       |todoage-configuration|
   - keywords                                  |todoage-configuration-keywords|
   - format                                      |todoage-configuration-format|
-6. Highlights                                             |todoage-highlights|
-7. Behavior                                                 |todoage-behavior|
-8. API                                                           |todoage-api|
-  - get                                                      |todoage-api-get|
-  - TodoageRefreshed                            |todoage-api-todoagerefreshed|
-9. Coexistence                                           |todoage-coexistence|
-
-==============================================================================
-1. todoage.nvim                                         *todoage-todoage.nvim*
-
+5. Highlights                                             |todoage-highlights|
 Neovim plugin that displays the age of TODO comments as inline virtual text.
 
-The age is resolved via `git blame` against the file on disk, so you can see at
-a glance how long a comment has been sitting there. A line like:
-
->text
-    // TODO: handle refunds
-<
-
-renders as (virtual text, not written to disk):
-
->text
-    // TODO: handle refunds                              (847 days)
-<
-
 
 ==============================================================================
-2. Requirements                                         *todoage-requirements*
+1. Requirements                                         *todoage-requirements*
 
 - Git
 - A tree-sitter parser for the languages you want annotated (`:TSInstall <lang>`).
-    Files without a parser are silently skipped.
 
 
 ==============================================================================
-3. Installation                                         *todoage-installation*
+2. Installation                                         *todoage-installation*
 
 With lazy.nvim <https://github.com/folke/lazy.nvim> or any plugin manager:
 
@@ -57,7 +33,7 @@ With lazy.nvim <https://github.com/folke/lazy.nvim> or any plugin manager:
 
 
 ==============================================================================
-4. Commands                                                 *todoage-commands*
+3. Commands                                                 *todoage-commands*
 
 - `:Todoage` refreshes annotations on the current buffer.
 - `:TodoageToggle` toggles annotations and auto-refresh on or off. When
@@ -66,7 +42,7 @@ With lazy.nvim <https://github.com/folke/lazy.nvim> or any plugin manager:
 
 
 ==============================================================================
-5. Configuration                                       *todoage-configuration*
+4. Configuration                                       *todoage-configuration*
 
 Pass options through `opts` (lazy.nvim) or `require("todoage").setup({ ... })`.
 With no arguments, the defaults apply.
@@ -128,7 +104,7 @@ Default:
 
 
 ==============================================================================
-6. Highlights                                             *todoage-highlights*
+5. Highlights                                             *todoage-highlights*
 
 Two highlight groups, both linked to `Comment` by default:
 
@@ -143,79 +119,6 @@ annotations visually louder. There is no `colors` setup option.
     vim.api.nvim_set_hl(0, "TodoageAge",         { fg = "#d7af5f" })
     vim.api.nvim_set_hl(0, "TodoageUncommitted", { fg = "#5f5f5f", italic = true })
 <
-
-
-==============================================================================
-7. Behavior                                                 *todoage-behavior*
-
-Annotations refresh automatically on:
-
-- `BufReadPost` — opening a file.
-- `BufWritePost` — saving a file.
-- `BufEnter` — entering a buffer (catches git state that changed while it sat in
-    the background, e.g. a commit, checkout, or rebase).
-- `FocusGained` — re-focusing Neovim (catches an external `git pull`).
-
-Refreshes are debounced ~150ms per buffer.
-
-Modified-but-unsaved buffers skip rendering entirely. Line numbers in the
-buffer diverge from line numbers in the on-disk blame, so annotations would be
-misleading. They reappear on save.
-
-Files outside a git repository, or not yet tracked, render no annotations.
-Uncommitted lines render as `(uncommitted)`.
-
-
-==============================================================================
-8. API                                                           *todoage-api*
-
-todoage exposes the markers it finds so other plugins can build on top of it (a
-Telescope picker, a lualine "oldest TODO" segment, project-wide listing)
-without todoage taking on those features itself.
-
-
-GET                                                          *todoage-api-get*
-
-`require("todoage").get(bufnr)` returns the markers found in `bufnr` (default:
-the current buffer) as of its last render, in ascending line order:
-
->lua
-    local todos = require("todoage").get()
-    -- {
-    --   { lnum = 12, keyword = "TODO", age_days = 847, author = "Ada", sha = "<40-char sha>" },
-    --   { lnum = 40, keyword = "FIXME" }, -- uncommitted: nil age_days/author/sha
-    -- }
-<
-
-`lnum` is 1-based. Uncommitted lines have nil `age_days`, `author`, and `sha`.
-A buffer that has not rendered yet (or while todoage is disabled) returns an
-empty table. The result is a fresh copy you may keep or modify.
-
-
-TODOAGEREFRESHED                                *todoage-api-todoagerefreshed*
-
-After each render todoage fires a `User` autocommand with pattern
-`TodoageRefreshed`, carrying the buffer in the event data, so you can refresh
-whatever you built on top of `get()`
-
->lua
-    vim.api.nvim_create_autocmd("User", {
-      pattern = "TodoageRefreshed",
-      callback = function(args)
-        local todos = require("todoage").get(args.data.bufnr)
-        -- update your statusline / picker / sign column
-      end,
-    })
-<
-
-
-==============================================================================
-9. Coexistence                                           *todoage-coexistence*
-
-todoagedeliberately does only one thing: show comment age. It doesn’t
-highlight keywords, build a quickfix list, or affect search — so it composes
-cleanly with todo-comments.nvim <https://github.com/folke/todo-comments.nvim>
-and similar plugins.
 
 Generated by panvimdoc <https://github.com/kdheepak/panvimdoc>
 

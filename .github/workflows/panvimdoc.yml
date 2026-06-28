@@ -37,6 +37,11 @@ jobs:
           description: "Display TODO comment age as inline virtual text"
           demojify: "true"
           treesitter: "true"
+          # The README uses a single `#` title with `##`/`###` sections (so it
+          # reads as a normal README). Shifting down one level makes the title
+          # the doc title and lifts `##` sections to top level, yielding clean
+          # `*todoage-<section>*` tags instead of `*todoage-todoage.nvim--…*`.
+          shiftheadinglevelby: "-1"
 
       - name: commit regenerated vimdoc
         uses: stefanzweifel/git-auto-commit-action@v7
