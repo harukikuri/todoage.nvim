@@ -1,0 +1,45 @@
+name: panvimdoc
+
+# doc/todoage.txt is generated from README.md, never edited by hand. When a PR
+# touches the README, regenerate the vimdoc and commit it back onto the PR
+# branch so the help doc can never drift from the README. main is protected, so
+# we deliberately do not push to it directly — the doc update lands as part of
+# the reviewed PR.
+on:
+  pull_request:
+    paths:
+      - README.md
+      - .github/workflows/panvimdoc.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  docs:
+    # The GITHUB_TOKEN can't push to a fork's branch, so skip auto-commit for
+    # fork PRs (a maintainer can regenerate via workflow_dispatch). Same-repo
+    # branches — the normal flow here — work.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: generate vimdoc
+        uses: kdheepak/panvimdoc@v4.0.1
+        with:
+          vimdoc: todoage
+          version: "Neovim >= 0.10"
+          description: "Display TODO comment age as inline virtual text"
+          demojify: "true"
+          treesitter: "true"
+
+      - name: commit regenerated vimdoc
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "docs: regenerate vimdoc from README"
+          file_pattern: doc/todoage.txt
