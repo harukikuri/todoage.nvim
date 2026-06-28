@@ -139,6 +139,45 @@ misleading. They reappear on save.
 Files outside a git repository, or not yet tracked, render no annotations.
 Uncommitted lines render as `(uncommitted)`.
 
+# API
+
+todoage exposes the markers it finds so other plugins can build on top of it (a
+Telescope picker, a lualine "oldest TODO" segment, project-wide listing) without
+todoage taking on those features itself.
+
+## get
+
+`require("todoage").get(bufnr)` returns the markers found in `bufnr` (default:
+the current buffer) as of its last render, in ascending line order:
+
+```lua
+local todos = require("todoage").get()
+-- {
+--   { lnum = 12, keyword = "TODO", age_days = 847, author = "Ada", sha = "<40-char sha>" },
+--   { lnum = 40, keyword = "FIXME" }, -- uncommitted: nil age_days/author/sha
+-- }
+```
+
+`lnum` is 1-based. Uncommitted lines have nil `age_days`, `author`, and `sha`. A
+buffer that has not rendered yet (or while todoage is disabled) returns an empty
+table. The result is a fresh copy you may keep or modify.
+
+## TodoageRefreshed
+
+After each render todoage fires a `User` autocommand with pattern
+`TodoageRefreshed`, carrying the buffer in the event data, so you can refresh
+whatever you built on top of `get()`:
+
+```lua
+vim.api.nvim_create_autocmd("User", {
+  pattern = "TodoageRefreshed",
+  callback = function(args)
+    local todos = require("todoage").get(args.data.bufnr)
+    -- update your statusline / picker / sign column
+  end,
+})
+```
+
 # Coexistence
 
 todoage deliberately does only one thing: show comment age. It doesn't highlight
